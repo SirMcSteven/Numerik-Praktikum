@@ -1,0 +1,73 @@
+#include <iostream>
+#include <fstream>
+#include <filesystem>
+#include <string>
+#include <sstream>
+#include <vector>
+using namespace std;
+namespace fs = filesystem;
+
+void read_specific_line(const fs::path& file_path) {
+    ifstream file(file_path);
+    string line;
+    int current_line = 1;
+    int Anzahl;
+
+    while (getline(file, line)) {
+        if (current_line == 22) {  
+            Anzahl = stoi(line);
+            break;
+        }else{
+            ++ current_line;
+        }
+    }
+    while (getline(file, line)) {
+        if (current_line > 22 && current_line <= Anzahl + 22) {
+            cout << line << endl;
+            ++ current_line;
+            }else {
+            ++ current_line;
+            }  
+        
+        }
+    
+        
+    file.close();
+
+} 
+
+
+void search_and_display_line(const fs::path& folder_path, const string& target_filename) {
+    for (const auto& entry : fs::recursive_directory_iterator(folder_path)) {
+        if (entry.is_regular_file() && entry.path().filename() == target_filename) {
+            cout << "File found: " << entry.path() << endl;
+            read_specific_line(entry.path());
+            return;
+        }
+    }
+    cout << "Error: File '" << target_filename << "' not found in the directory.\n";
+}
+
+
+
+int main() {
+    string folder_path;
+    string file_name;
+
+    cout << "Enter the folder path: ";
+    cin >> folder_path;
+    cout << "Enter the file name: ";
+    cin >> file_name;
+   
+    search_and_display_line(folder_path, file_name);
+    
+    
+
+
+
+
+
+   
+    
+    return 0;
+}
