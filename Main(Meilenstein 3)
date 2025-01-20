@@ -68,7 +68,7 @@ vector<double> Abl(const vector<vector<double>> &C, const vector<vector<double>>
     string key_plus = make_key(x + dx, y + dy, z + dz);
     string key_minus = make_key(x - dx, y - dy, z - dz);
 
-    vector<double> diff(3, 0.0);  //hier für settings?   // 3 := Anzahl der Dimension; 0.0 := Anfangswert; berechnet die Differenzen zwischen zwei U vectors
+    vector<double> diff(stod(settings["demension"]), 0.0);  //hier für settings?   // 3 := Anzahl der Dimension; 0.0 := Anfangswert; berechnet die Differenzen zwischen zwei U vectors
     if (point_index.count(key_plus) && point_index.count(key_minus)) {   // count := Funktion, nachprueft ob "key" existiert
         // fuer interne Zelle
         int idx_plus = point_index[key_plus];      //idx_plus := C mit dem groesseren Koordinatenwert fuer x/y/z einzel
@@ -124,7 +124,6 @@ void einschreiben_von_gradienten(const vector<vector<vector<double>>>& results, 
     }
 
     // fuegt die Gradienten auf Zeile 24 ein
-    int line_skip = 23;
     file_lines.insert(file_lines.begin() + stod(settings["line_skip"]), new_lines.begin(), new_lines.end()); //hier für settings
 
     // schreibt die ganze Datei zurueck
@@ -158,10 +157,11 @@ void einschreiben_von_Q(const vector<double>& Q, const fs::path& file_path, unor
     vector<string> new_lines;
     for (const auto& value : Q) {
         ostringstream ss;
-        ss << value;
+        ss << "(" << value << ")";  
         new_lines.push_back(ss.str());
     }
-    file_lines.insert(file_lines.begin() + stod(settings["line_skip_new"]), new_lines.begin(), new_lines.end()); //hier für settings
+
+    file_lines.insert(file_lines.begin() + stod(settings["line_skip_new"]), new_lines.begin(), new_lines.end());
 
     ofstream output_file(file_path);
     if (!output_file.is_open()) {
@@ -174,13 +174,14 @@ void einschreiben_von_Q(const vector<double>& Q, const fs::path& file_path, unor
     }
     output_file.close();
 }
+
 vector<double> Q_Kriterium(const vector<vector<vector<double>>>&results){
     vector<double> Q_Kriterium(results.size(), 0.0);
     for (int i = 0; i < results.size(); i++){
         Q_Kriterium[i] = (pow(results[i][0][0]+results[i][1][1]+results[i][2][2],2.0) - ((results[i][0][0]
-             *results[i][0][0]+results[i][0][1]*results[i][1][0]+results[i][0][2]*results[i][2][0])+(results[i][1][0]
-             *results[i][0][1]+results[i][1][1]*results[i][1][1]+results[i][1][2]*results[i][2][1])+(results[i][2][0]
-             *results[i][0][2]+results[i][2][1]*results[i][1][2]+results[i][2][2]*results[i][2][2])))*0.5;
+        *results[i][0][0]+results[i][0][1]*results[i][1][0]+results[i][0][2]*results[i][2][0])+(results[i][1][0]
+        *results[i][0][1]+results[i][1][1]*results[i][1][1]+results[i][1][2]*results[i][2][1])+(results[i][2][0]
+        *results[i][0][2]+results[i][2][1]*results[i][1][2]+results[i][2][2]*results[i][2][2])))*0.5;
     }
     return Q_Kriterium;
 }
@@ -188,7 +189,6 @@ vector<double> Q_Kriterium(const vector<vector<vector<double>>>&results){
 
 
 unordered_map<string, string> displaySettings(const fs::path& file_path) {
-    
     ifstream file(file_path);
     if (!file.is_open()) {
         cerr << "Error: Cannot open file " << file_path << endl;
@@ -241,35 +241,23 @@ void developer_mode(const vector<vector<double>>& C, const vector<vector<vector<
     }
     cout << "--- Ende Developer Mode Output ---" << endl;
 }
-
-
-
-
 int main() {
-    // Benutzerdefinierte Eingabe für max_cell und time_step
-    int max_cell;
-    double time_step;
-
-    cout << "Geben Sie die maximale Anzahl der Zellen (max_cell) ein: ";
-    cin >> max_cell;
-
-    cout << "Geben Sie den Zeitschritt (time_step) ein: ";
-    cin >> time_step;
-
-    fs::path settings_file_path = "C:\\Users\\nasch\\Desktop\\Numerik_Praktikum\\Simulation_Umstroemung_eines_Wuerfels\\settings1.txt";
+// Benutzerdefinierte Eingabe für max_cell und time_step
+    fs::path settings_file_path = ".\\Simulation_Umstroemung_eines_Wuerfels\\settings1.txt";
     unordered_map<string, string> settings = displaySettings(settings_file_path);
+    int max_cell= stod(settings["max_cell"]);
+    double time_step= stod(settings["time_step"]);
 
-    for (double current_time = 0.2; current_time <= time_step; current_time += 0.2){
-       cout << "Verarbeite Zeitschritt: " << current_time << endl;
-       
-       
+    
+    for (double current_time = stod(settings["current_time"]); current_time <= time_step; current_time += 0.2){
+    cout << "Verarbeite Zeitschritt: " << current_time << endl;
         // Pfade und Dateinamen aus der Settings-Datei verwenden
     string folder_CundU = settings["\"folder_path_CundU\""];
     string c = "\\C";
     string u = "\\U";
     
     ostringstream oss_cundu;
-    oss_cundu << folder_CundU << current_time;
+    oss_cundu << folder_CundU << current_time ;
     string folder_path_CundU = oss_cundu.str();
     ostringstream oss_c;
     oss_c << folder_CundU << current_time << c;
@@ -289,9 +277,8 @@ int main() {
         point_index[make_key(C[i][0], C[i][1], C[i][2])] = i;
     }
 
-    // Vektoren für Gradienten und Q-Werte zurücksetzen
-    vector<vector<vector<double>>> results; // Gradienten
-    
+    // vector fuer die berechneten Gradienten
+    vector<vector<vector<double>>> results;
 
     for (int i = 0; i < C.size(); ++i) { // matrix nimmt die Daten von Funktion Abl; matrix := Jacobbi-Matrix; matrix
         vector<vector<double>> matrix(3, vector<double>(3, 0.0));//jede Zeile von matrix verpackt die partiellen Ableitungen
@@ -300,16 +287,12 @@ int main() {
         matrix[2] = Abl(C, U, point_index, i, stod(settings["matrix2_dx"]), stod(settings["matrix2_dy"]), stod(settings["matrix2_dz"]),settings); // z Richtung
         results.push_back(matrix); //speichert die Werte von matrix ins results
     }
-    
-
-     
-
-    fs::path output_file_path = create_file("C:\\Users\\nasch\\Desktop\\Numerik_Praktikum\\Simulation_Umstroemung_eines_Wuerfels",folder_path_CundU, "grad(U)");
-    fs::path Q_file_path = create_file("C:\\Users\\nasch\\Desktop\\Numerik_Praktikum\\Simulation_Umstroemung_eines_Wuerfels",folder_path_CundU, "Q");
+    fs::path output_file_path = create_file(settings["\"folder_path_CundU\""],folder_path_CundU, "grad(U)");
+    fs::path Q_file_path = create_file(settings["\"folder_path_CundU\""],folder_path_CundU, "Q");
     einschreiben_von_gradienten(results, output_file_path,settings);
     vector<double> Q = Q_Kriterium(results); // kommt auch in die settings-Datei
     einschreiben_von_Q(Q, Q_file_path,settings); //alle funktionen kommen in settings-Datei
-    
+
     bool dev_mode = (settings["developer_mode"] == "true"); // Developer-Modus standardmäßig aktivieren
         if (dev_mode) {
             cout << "Developer-Modus ist aktiv." << endl; // Hinweis, dass der Modus aktiv ist
