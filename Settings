@@ -10,6 +10,8 @@ cell_distance=0.1
 line_skip=23
 line_skip_new=22
 
+demension=3
+
 # Werte für dx, dy, dz
 matrix0_dx=0.05
 matrix0_dy=0.0
@@ -20,3 +22,9 @@ matrix1_dz=0.0
 matrix2_dx=0.0
 matrix2_dy=0.0
 matrix2_dz=0.05
+
+max_cell=3
+time_step=10.0
+current_time=10.0
+
+developer_mode=true
