@@ -27,7 +27,7 @@ vector<vector<double>> readCundU(const fs::path& file_path,unordered_map <string
     int current_line = 1;
     int Anzahl;
     int line_skip = stod(settings["line_skip_new"]);
-    
+
     while (getline(file, line)) {
         if (current_line == line_skip) {                                 //ueberspringt 22 Zeile fuer C und U
             Anzahl = stoi(line);
@@ -36,7 +36,7 @@ vector<vector<double>> readCundU(const fs::path& file_path,unordered_map <string
         ++current_line;
     }
 
-  
+
     while (getline(file, line) && current_line <= line_skip + Anzahl) {
         size_t start = line.find('(');
         size_t end = line.find(')');
@@ -157,7 +157,7 @@ void einschreiben_von_Q(const vector<double>& Q, const fs::path& file_path, unor
     vector<string> new_lines;
     for (const auto& value : Q) {
         ostringstream ss;
-        ss << "(" << value << ")";  
+        ss << value ;
         new_lines.push_back(ss.str());
     }
 
@@ -179,9 +179,9 @@ vector<double> Q_Kriterium(const vector<vector<vector<double>>>&results){
     vector<double> Q_Kriterium(results.size(), 0.0);
     for (int i = 0; i < results.size(); i++){
         Q_Kriterium[i] = (pow(results[i][0][0]+results[i][1][1]+results[i][2][2],2.0) - ((results[i][0][0]
-        *results[i][0][0]+results[i][0][1]*results[i][1][0]+results[i][0][2]*results[i][2][0])+(results[i][1][0]
-        *results[i][0][1]+results[i][1][1]*results[i][1][1]+results[i][1][2]*results[i][2][1])+(results[i][2][0]
-        *results[i][0][2]+results[i][2][1]*results[i][1][2]+results[i][2][2]*results[i][2][2])))*0.5;
+                                                                                          *results[i][0][0]+results[i][0][1]*results[i][1][0]+results[i][0][2]*results[i][2][0])+(results[i][1][0]
+                                                                                                                                                                                  *results[i][0][1]+results[i][1][1]*results[i][1][1]+results[i][1][2]*results[i][2][1])+(results[i][2][0]
+                                                                                                                                                                                                                                                                          *results[i][0][2]+results[i][2][1]*results[i][1][2]+results[i][2][2]*results[i][2][2])))*0.5;
     }
     return Q_Kriterium;
 }
@@ -219,8 +219,8 @@ fs::path create_file(const fs::path& source_folder_path, const fs::path& target_
 }
 
 // Funktion zur Ausgabe der Zellinformationen im Developer-Modus
-void developer_mode(const vector<vector<double>>& C, const vector<vector<vector<double>>>& gradients, const vector<double>& Q, double time_step, int max_cell) {
-    cout << "--- Developer Mode Output (Zeitabschnitt: " << time_step << ") ---" << endl;
+void developer_mode(const vector<vector<double>>& C, const vector<vector<vector<double>>>& gradients, const vector<double>& Q, double current_time, int max_cell) {
+    cout << "--- Developer Mode Output (Zeitabschnitt: " << current_time << ") ---" << endl;
     int cell_count = min(max_cell, static_cast<int>(C.size())); // Begrenzt die Ausgabe auf max_cell
     for (int i = 0; i < cell_count; ++i) {
         cout << "Zelle " << i + 1 << ":" << endl;
@@ -243,65 +243,65 @@ void developer_mode(const vector<vector<double>>& C, const vector<vector<vector<
 }
 int main() {
 // Benutzerdefinierte Eingabe für max_cell und time_step
-    fs::path settings_file_path = ".\\Simulation_Umstroemung_eines_Wuerfels\\settings1.txt";
+    fs::path settings_file_path = ".\\Simulation_Umstroemung_eines_Wuerfels\\settings.txt";
     unordered_map<string, string> settings = displaySettings(settings_file_path);
     int max_cell= stod(settings["max_cell"]);
     double time_step= stod(settings["time_step"]);
 
-    
+
     for (double current_time = stod(settings["current_time"]); current_time <= time_step; current_time += 0.2){
-    cout << "Verarbeite Zeitschritt: " << current_time << endl;
+        cout << "Verarbeite Zeitschritt: " << current_time << endl;
         // Pfade und Dateinamen aus der Settings-Datei verwenden
-    string folder_CundU = settings["\"folder_path_CundU\""];
-    string c = "\\C";
-    string u = "\\U";
-    
-    ostringstream oss_cundu;
-    oss_cundu << folder_CundU << current_time ;
-    string folder_path_CundU = oss_cundu.str();
-    ostringstream oss_c;
-    oss_c << folder_CundU << current_time << c;
-    string C_file_name = oss_c.str();
-    ostringstream oss_u;
-    oss_u << folder_CundU << current_time << u;
-    string U_file_name = oss_u.str();
+        string folder_CundU = settings["\"folder_path_CundU\""];
+        string c = "\\C";
+        string u = "\\U";
 
-    //liest und speichert die eingelesenen Daten in vector anhand des filepath ueber die Funktionen ; speichert diese Automatisch in der struct.
-    
-    vector<vector<double>> C = readCundU(C_file_name,settings);
-    vector<vector<double>> U = readCundU(U_file_name,settings);
-    
-    // Buildung von Hash Table, deklariert map und erstellt keys
-    unordered_map<string, int> point_index;
-    for (int i = 0; i < C.size(); ++i) {
-        point_index[make_key(C[i][0], C[i][1], C[i][2])] = i;
-    }
+        ostringstream oss_cundu;
+        oss_cundu << folder_CundU << current_time ;
+        string folder_path_CundU = oss_cundu.str();
+        ostringstream oss_c;
+        oss_c << folder_CundU << current_time << c;
+        string C_file_name = oss_c.str();
+        ostringstream oss_u;
+        oss_u << folder_CundU << current_time << u;
+        string U_file_name = oss_u.str();
 
-    // vector fuer die berechneten Gradienten
-    vector<vector<vector<double>>> results;
+        //liest und speichert die eingelesenen Daten in vector anhand des filepath ueber die Funktionen ; speichert diese Automatisch in der struct.
 
-    for (int i = 0; i < C.size(); ++i) { // matrix nimmt die Daten von Funktion Abl; matrix := Jacobbi-Matrix; matrix
-        vector<vector<double>> matrix(3, vector<double>(3, 0.0));//jede Zeile von matrix verpackt die partiellen Ableitungen
-        matrix[0] = Abl(C, U, point_index, i, stod(settings["matrix0_dx"]), stod(settings["matrix0_dy"]),stod(settings["matrix0_dz"]),settings); // x Richtung
-        matrix[1] = Abl(C, U, point_index, i, stod(settings["matrix1_dx"]), stod(settings["matrix1_dy"]),stod(settings["matrix1_dz"]),settings); // y Richtung
-        matrix[2] = Abl(C, U, point_index, i, stod(settings["matrix2_dx"]), stod(settings["matrix2_dy"]), stod(settings["matrix2_dz"]),settings); // z Richtung
-        results.push_back(matrix); //speichert die Werte von matrix ins results
-    }
-    fs::path output_file_path = create_file(settings["\"folder_path_CundU\""],folder_path_CundU, "grad(U)");
-    fs::path Q_file_path = create_file(settings["\"folder_path_CundU\""],folder_path_CundU, "Q");
-    einschreiben_von_gradienten(results, output_file_path,settings);
-    vector<double> Q = Q_Kriterium(results); // kommt auch in die settings-Datei
-    einschreiben_von_Q(Q, Q_file_path,settings); //alle funktionen kommen in settings-Datei
+        vector<vector<double>> C = readCundU(C_file_name,settings);
+        vector<vector<double>> U = readCundU(U_file_name,settings);
 
-    bool dev_mode = (settings["developer_mode"] == "true"); // Developer-Modus standardmäßig aktivieren
+        // Buildung von Hash Table, deklariert map und erstellt keys
+        unordered_map<string, int> point_index;
+        for (int i = 0; i < C.size(); ++i) {
+            point_index[make_key(C[i][0], C[i][1], C[i][2])] = i;
+        }
+
+        // vector fuer die berechneten Gradienten
+        vector<vector<vector<double>>> results;
+
+        for (int i = 0; i < C.size(); ++i) { // matrix nimmt die Daten von Funktion Abl; matrix := Jacobbi-Matrix; matrix
+            vector<vector<double>> matrix(3, vector<double>(3, 0.0));//jede Zeile von matrix verpackt die partiellen Ableitungen
+            matrix[0] = Abl(C, U, point_index, i, stod(settings["matrix0_dx"]), stod(settings["matrix0_dy"]),stod(settings["matrix0_dz"]),settings); // x Richtung
+            matrix[1] = Abl(C, U, point_index, i, stod(settings["matrix1_dx"]), stod(settings["matrix1_dy"]),stod(settings["matrix1_dz"]),settings); // y Richtung
+            matrix[2] = Abl(C, U, point_index, i, stod(settings["matrix2_dx"]), stod(settings["matrix2_dy"]), stod(settings["matrix2_dz"]),settings); // z Richtung
+            results.push_back(matrix); //speichert die Werte von matrix ins results
+        }
+        fs::path output_file_path = create_file(settings["\"folder_path_CundU\""],folder_path_CundU, "grad(U)");
+        fs::path Q_file_path = create_file(settings["\"folder_path_CundU\""],folder_path_CundU, "Q");
+        einschreiben_von_gradienten(results, output_file_path,settings);
+        vector<double> Q = Q_Kriterium(results); // kommt auch in die settings-Datei
+        einschreiben_von_Q(Q, Q_file_path,settings); //alle funktionen kommen in settings-Datei
+
+        bool dev_mode = (settings["developer_mode"] == "true"); // Developer-Modus standardmäßig aktivieren
         if (dev_mode) {
             cout << "Developer-Modus ist aktiv." << endl; // Hinweis, dass der Modus aktiv ist
-            developer_mode(C, results, Q, time_step, max_cell); // Developer-Ausgabe
+            developer_mode(C, results, Q, current_time, max_cell); // Developer-Ausgabe
         } else {
             cout << "Developer-Modus ist deaktiviert." << endl; // Hinweis, dass der Modus nicht aktiv ist
         }
 
-    
+
     }
     return 0;
 }
