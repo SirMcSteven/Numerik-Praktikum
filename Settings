@@ -24,7 +24,7 @@ matrix2_dy=0.0
 matrix2_dz=0.05
 
 max_cell=3
-time_step=10.0
-current_time=10.0
+time_step=15.0
+current_time=0.2
 
 developer_mode=true
